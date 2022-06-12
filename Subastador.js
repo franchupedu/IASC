@@ -1,4 +1,11 @@
 var express = require('express');
+var WebSocketServer = require('websocket').server;
+var WebSocketClient = require('websocket').client;
+var WebSocketFrame  = require('websocket').frame;
+var WebSocketRouter = require('websocket').router;
+var W3CWebSocket = require('websocket').w3cwebsocket;
+var http = require('http');
+
 var app = express();
 // for parsing the body in POST request
 var bodyParser = require('body-parser');
@@ -13,7 +20,7 @@ app.use(bodyParser.json());
 /* POST /buyers
     {
         "buyer": {
-            "id": 3,
+            //generar Id
             "name": "Test User",
             "ip" : "192.180.55.66",
             "tags": ["Inmuebles", "Jueguitos"]
@@ -74,6 +81,7 @@ app.post('/bid/:id', function (req, res) {
     return res.send('Tu precio fue demasiado bajo');
 });
 
+const wsServer = new WebSocketServer({httpServer:app,autoAcceptConnections: true});
 
 app.listen('8000', function(){
     console.log('Server listening on port 8000');
