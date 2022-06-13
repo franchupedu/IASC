@@ -12,7 +12,6 @@ var bodyParser = require('body-parser');
 
 var buyers = [];
 var bids = [];
-var conections = [];
 
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -33,13 +32,6 @@ app.post('/buyers', function (req, res) {
     var buyer = req.body.buyer;
     buyers.push(buyer);
 
-    var client = new WebSocketClient();
-
-    client.connect('ws://' + buyer.ip +'/', 'echo-protocol');
-    var conection = {'id': buyer.name, 'client': client};
-    conections.push(conection);
-
-    console.log(conection);
     return res.send('Comprador '+ buyer + ' agregado exitosamente');
 });
 
