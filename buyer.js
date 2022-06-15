@@ -29,3 +29,8 @@ socket.on('error', err =>
 {
     console.log(err);
 });
+
+socket.on('new_bid', bid => 
+{
+    console.log(bid);
+});

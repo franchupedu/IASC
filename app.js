@@ -3,12 +3,16 @@ const socketio = require('socket.io')
 const app = express()
 const cors = require('cors');
 
+const { v4: uuidv4 } = require('uuid');
+
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
 app.use(express.json());
 
 var buyers = [];
 var conections = [];
+
+var bids = [];
 
 /* POST /buyers
     {
@@ -25,6 +29,29 @@ app.post('/buyers', function (req, res)
     buyers.push(buyer);
 
     return res.send('Comprador '+ buyer.name + ' agregado exitosamente');    
+});
+
+/* POST /bids
+    {
+        "bid": 
+        {
+            "tags": ["Inmuebles", "Jueguitos"],
+            "price" : 92.5,
+            "duration": 50,
+            "article": ""
+        }
+    }
+*/
+app.post('/bids', function (req, res) 
+{
+    var bid = req.body.bid;
+    bid.id = uuidv4();
+    bid.bids = [];
+    bids.push(bid);
+
+    notifyBuyers(bid);
+
+    return res.send('Subasta numero agregada exitosamente');
 });
 
 const server = app.listen(process.env.PORT || 3000, () => 
@@ -61,3 +88,15 @@ io.on('connection', socket =>
             socket.emit('error', "You first need to register via POST to /buyers");
     })
 })
+
+function notifyBuyers(bid)
+{
+    var targets = conections.filter(c => c.buyer.tags.some(t => bid.tags.includes(t)));
+
+    console.log(targets);
+
+    for(const target of targets)
+    {
+        target.socket.emit('new_bid', {article: bid.article, price: bid.price});
+    }
+}
