@@ -2,6 +2,7 @@ const express = require('express')
 const socketio = require('socket.io')
 const app = express()
 const cors = require('cors');
+const os = require('os');
 
 const { v4: uuidv4 } = require('uuid');
 
@@ -54,9 +55,14 @@ app.post('/bids', function (req, res)
     return res.send('Subasta numero agregada exitosamente');
 });
 
-const server = app.listen(process.env.PORT || 3000, () => 
+app.get('/info', function(req, res)
 {
-    console.log("Server is running")
+    return res.send(`<h3>It's ${os.hostname()}</h3>`);
+})
+
+const server = app.listen(process.env.PORT || 5000, () => 
+{
+    console.log(`Server Started on Port  5000`)
 })
 
 //Initialize socket for the server
