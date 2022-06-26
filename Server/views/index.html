@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Subastas Automáticas Ponchito Landing Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Subastas Automáticas Ponchito</h1>
+      <form action="/buyers" method="POST">
+        <div class="form-group">
+          <label for="firstName">Name</label>
+          <input type="text" class="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter name" name="name">
+        </div>
+        <div class="form-group">
+          <label for="lastName">Ip</label>
+          <input type="text" class="form-control" id="ip" aria-describedby="emailHelp" placeholder="Enter ip" name="ip">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputEmail1">Tags</label>
+          <input type="text" class="form-control" id="tags" aria-describedby="emailHelp" name="tags" placeholder="Enter tags">
+          <em id="tags">Use a comma separated list.</em>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+  </body>
+</html>

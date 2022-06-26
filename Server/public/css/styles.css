@@ -1,0 +1,14 @@
+#cardsSection 
+{
+    -webkit-column-width: 300px;
+    -moz-column-width: 300px;
+    -o-column-width: 300px;
+    -ms-column-width: 300px;
+    column-width: 3000px;
+    
+    -webkit-column-rule-style: solid;
+    -moz-column-rule-style: solid;
+    -o-column-rule-style: solid;
+    -ms-column-rule-style: solid;
+    column-rule-style: solid;
+}

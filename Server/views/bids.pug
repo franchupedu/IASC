@@ -1,0 +1,49 @@
+doctype html
+html 
+    head 
+        link(rel='stylesheet', href='/css/styles.css')
+        title Subastas Automáticas Ponchito Bids Page
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js')
+        script(src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous")
+    body 
+        h1 Subastas Automáticas Ponchito
+        section
+            each bid in results
+                div(id=bid.id)
+                    p #{bid.duration}
+                    p #{bid.tags}
+                    p #{bid.article}
+                    p Current Price: #{bid.price} <br>
+                    form(action="javascript:postNewBid(\""+ bid.id + "\")")
+                        input(type="number", name="newBid", id="newBid", value= bid.price+1, min= bid.price+1)
+                        input(type="submit", value="Bid")                      
+                    br
+        script.
+            const socket = io();
+            console.log("Conecting")
+
+            function postNewBid(bidId)
+            {
+                console.log(bidId)
+                var newBid
+                newBid = $("#" + bidId).find('input[name="newBid"]').val();
+                console.log('New Price: ' + newBid)
+
+                socket.emit('post_bid', {bidId: bidId, ammount: newBid});
+            }
+
+            socket.on('bid_updated', bid =>
+            {
+                console.log(bid.bidId)
+                console.log(bid.ammount)
+                window.location.reload();
+            })
+
+            socket.on('new_bid', bid =>
+            {
+                console.log(bid)
+                window.location.reload();
+            })
+
+            
+            
