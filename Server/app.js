@@ -1,13 +1,12 @@
 const express = require('express')
 const socketio = require('socket.io')
 const app = express()
-const cors = require('cors');
 const os = require('os');
 var bodyParser = require('body-parser')
 const path = require("path");
-const router = express.Router();
 
 const { v4: uuidv4 } = require('uuid');
+const repository = require("./repositoryAdapter");
 
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
@@ -17,7 +16,6 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set("view engine", "pug");
 
-var buyers = [];
 var conections = [];
 
 var bids = [];
@@ -45,9 +43,21 @@ app.get('/bids', function(req, res)
 app.post('/buyers', urlencodedParser, function (req, res) 
 {
     var buyer = req.body;
-    buyers.push(buyer);
+    buyer.tags = buyer.tags.split(',').map(s => s.trim());
 
-    return res.redirect('/bids');    
+    repository.PostBuyer(buyer, (error, result) => 
+    {
+        if (result.status != 'S') 
+        {
+            console.log("Error: " + result.error)
+            return res.status(400).json({status: 400, message: result.error})
+        }
+        else
+        {
+            console.log("Result: " + result.status);
+            return res.redirect('/bids');  
+        }   
+    });  
 });
 
 /* POST /bids
@@ -65,12 +75,21 @@ app.post('/bids', function (req, res)
 {   
     var bid = req.body.bid;
     bid.id = uuidv4();
-    bid.bids = [];
-    bids.push(bid);
 
-    notifyBuyers(bid);
-
-    return res.send('Subasta numero agregada exitosamente');
+    repository.PostBid(bid, (error, result) =>
+    {
+        if (result.status != 'S') 
+        {
+            console.log("Error: " + result.error)
+            return res.status(400).json({status: 400, message: result.error})
+        }
+        else
+        {
+            console.log("Result: " + result.status);
+            notifyBuyers(bid);
+            return res.send('Subasta numero agregada exitosamente');
+        }
+    })
 });
 
 app.get('/info', function(req, res)
@@ -109,12 +128,9 @@ io.on('connection', socket =>
         console.log(newBid.bidId);
         console.log(newBid.ammount);
         
-        validateBid(newBid.bidId, newBid.ammount).then( res =>
-        {
-            bids.filter(b => b.id == newBid.bidId)[0].price = newBid.ammount
-            console.log(bids)
-            io.emit('bid_updated', newBid)
-        })
+        bids.filter(b => b.id == newBid.bidId)[0].price = newBid.ammount
+        console.log(bids)
+        io.emit('bid_updated', newBid)
     })
 })
 
@@ -123,12 +139,4 @@ function notifyBuyers(bid)
     console.log(conections.length);
 
     io.emit('new_bid', {bid: bid})
-}
-
-function validateBid(bidId, ammount)
-{
-    return new Promise((resolve, reject) => 
-    {
-        resolve ();
-    })
 }

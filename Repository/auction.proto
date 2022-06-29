@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+message Buyer {
+    string id = 1;
+    string name = 2;
+    string ip = 3;
+    repeated string tags = 4;
+}
+
+message Bid {
+    string id = 1;
+    float price = 2;
+    float duration = 3;
+    string article = 4;
+    repeated string tags = 5;
+}
+
+message Result {
+    string status = 1;
+    string error = 2;
+}
+
+service AuctionService 
+{
+    rpc PostBuyer (Buyer) returns (Result) {}
+    rpc PostBid (Bid) returns (Result) {}
+}
