@@ -18,8 +18,6 @@ app.set("view engine", "pug");
 
 var conections = [];
 
-var bids = [];
-
 app.get('/', function(req, res)
 {
     res.sendFile(__dirname + '/views/index.html');
@@ -27,8 +25,17 @@ app.get('/', function(req, res)
 
 app.get('/bids', function(req, res)
 {
-    console.log(bids)
-    return res.render('bids', {results: bids});
+    repository.GetBids({}, (error, bidList) =>
+    {
+        if (error != null) 
+            res.sendStatus(500);
+        else
+        {
+            return res.render('bids', {results: bidList.bids});
+        }
+            
+    });
+    
 })
 
 /* POST /buyers
@@ -75,6 +82,7 @@ app.post('/bids', function (req, res)
 {   
     var bid = req.body.bid;
     bid.id = uuidv4();
+    bid.startTimestamp = + new Date();
 
     repository.PostBid(bid, (error, result) =>
     {
@@ -99,7 +107,7 @@ app.get('/info', function(req, res)
 
 const server = app.listen(process.env.PORT || 5000, () => 
 {
-    console.log(`Server Started on Port  5000`)
+    console.log(`Server Started on Port 5000`)
 })
 
 //Initialize socket for the server
@@ -119,24 +127,27 @@ io.on('connection', socket =>
 {
     console.log("User connected");
 
-    socket.username = "Anonymous";
-
     conections.push(socket)
 
     socket.on('post_bid', newBid =>
-    {
-        console.log(newBid.bidId);
-        console.log(newBid.ammount);
-        
-        bids.filter(b => b.id == newBid.bidId)[0].price = newBid.ammount
-        console.log(bids)
-        io.emit('bid_updated', newBid)
+    {        
+        repository.PostNewBid({id: newBid.bidId, price: newBid.ammount}, (error, result) =>
+        {
+            if (result.status != 'S') 
+            {
+                console.log("Error: " + result.error);
+                io.emit('bid_updated', newBid);
+            }
+            else
+            {
+                console.log("Result: " + result.status);
+                io.emit('bid_updated', newBid);
+            }
+        });
     })
 })
 
 function notifyBuyers(bid)
 {
-    console.log(conections.length);
-
     io.emit('new_bid', {bid: bid})
 }

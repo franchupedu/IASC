@@ -53,6 +53,7 @@ if(cluster.isMaster)
 } else
 {
     var buyers = [];
+    var bids = [];
 
     var packageDefinition = protoLoader.loadSync(PROTO_PATH, options);
     const auctionProto = grpc.loadPackageDefinition(packageDefinition);
@@ -77,9 +78,25 @@ if(cluster.isMaster)
         postBid: (call, callback) => 
         {
             var bid = call.request;
-            console.log(bid)
+            bids.push(bid);
             return callback(null, {status: "S", error: null})
         },
+        postNewBid: (call, callback) => 
+        {
+            var newBid = call.request;
+            if(validateNewBid(newBid))
+            {
+                bids.find(b => b.id == newBid.id).price = newBid.price;
+                return callback(null, {status: "S", error: null})
+            }else
+            {
+                return callback(null, {status: "N", error: "Invalid Bid"});
+            }
+        },
+        getBids: (_, callback) => 
+        {            
+            return callback(null, {bids: bids});
+        }
     });
       
     server.bindAsync(
@@ -94,8 +111,17 @@ if(cluster.isMaster)
 
     function validateBuyer(buyer)
     {
-        console.log(buyers.find(b => b.name == buyer.name))
         if(buyers.find(b => b.name == buyer.name) != undefined)
+            return false;
+
+        return true;
+    }
+
+    function validateNewBid (newBid)
+    {
+        var bid = bids.find(b => b.id == newBid.id);
+
+        if( bid == undefined || bid.price >= newBid.price)
             return false;
 
         return true;

@@ -12,9 +12,15 @@ message Buyer {
 message Bid {
     string id = 1;
     float price = 2;
-    float duration = 3;
-    string article = 4;
-    repeated string tags = 5;
+    int64 startTimestamp = 3;
+    float duration = 4;
+    string article = 5;
+    repeated string tags = 6;
+}
+
+message newBid {
+    string id = 1;
+    float price = 2;
 }
 
 message Result {
@@ -22,9 +28,16 @@ message Result {
     string error = 2;
 }
 
+message Empty {}
+
+message BidList {
+   repeated Bid bids = 1;
+}
 
 service AuctionService 
 {
     rpc PostBuyer (Buyer) returns (Result) {}
     rpc PostBid (Bid) returns (Result) {}
+    rpc PostNewBid (newBid) returns (Result) {}
+    rpc GetBids (Empty) returns (BidList) {}
 }
