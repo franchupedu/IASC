@@ -1,5 +1,6 @@
 const express = require('express');
 var cluster = require('cluster');
+const socketio = require('socket.io')
 
 const grpc = require("@grpc/grpc-js");
 const PROTO_PATH = "./auction.proto";
@@ -7,6 +8,7 @@ var protoLoader = require("@grpc/proto-loader");
 
 
 const PORT = 3000;
+const WsPort = 4000;
 
 const options = {
     keepCase: true,
@@ -21,6 +23,33 @@ if(cluster.isMaster)
     var numWorkers = require('os').cpus().length;
     numWorkers = 1;
     var workers = [];
+    var conections = [];
+
+    const app = express();
+
+    const server = app.listen(process.env.PORT || WsPort, () => 
+    {
+        console.log(`WS Server Started on Port ` + WsPort)
+    })
+
+    const io = socketio(server,
+        {
+            cors: {
+                origin: "http://localhost:5000",
+                methods: ["GET", "POST"],
+                transports: ['websocket', 'polling'],
+                credentials: true
+            },
+            allowEIO3: true
+        }
+    );
+
+    io.on('connection', socket => 
+    {
+        console.log("User connected");
+
+        conections.push(socket);
+    })
    
     console.log('Master cluster setting up ' + numWorkers + ' workers...');
    
@@ -28,6 +57,19 @@ if(cluster.isMaster)
     {
         var worker = cluster.fork();
         workers.push(worker);
+
+        worker.on('message', function(msg)
+        {
+            switch(msg.type)
+            {
+                case 'new_bid':
+                    io.emit('new_bid', msg.data)
+                    break;
+                case 'update_bid':
+                    io.emit('update_bid', msg.data)
+                    break;
+            }
+        });
     }
 
     cluster.on('online', function(worker) 
@@ -54,11 +96,13 @@ if(cluster.isMaster)
 {
     var buyers = [];
     var bids = [];
+    var conections = [];
 
     var packageDefinition = protoLoader.loadSync(PROTO_PATH, options);
     const auctionProto = grpc.loadPackageDefinition(packageDefinition);
 
     const server = new grpc.Server();
+    const app = express()
 
     server.addService(auctionProto.AuctionService.service, 
     {
@@ -79,6 +123,7 @@ if(cluster.isMaster)
         {
             var bid = call.request;
             bids.push(bid);
+            process.send({type: 'new_bid', data: bid});
             return callback(null, {status: "S", error: null})
         },
         postNewBid: (call, callback) => 
@@ -87,6 +132,7 @@ if(cluster.isMaster)
             if(validateNewBid(newBid))
             {
                 bids.find(b => b.id == newBid.id).price = newBid.price;
+                process.send({type: 'update_bid', data: newBid});
                 return callback(null, {status: "S", error: null})
             }else
             {

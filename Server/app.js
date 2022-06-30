@@ -4,6 +4,7 @@ const app = express()
 const os = require('os');
 var bodyParser = require('body-parser')
 const path = require("path");
+const { io } = require("socket.io-client");
 
 const { v4: uuidv4 } = require('uuid');
 const repository = require("./repositoryAdapter");
@@ -111,7 +112,7 @@ const server = app.listen(process.env.PORT || 5000, () =>
 })
 
 //Initialize socket for the server
-const io = socketio(server,
+const ioServer = socketio(server,
     {
         cors: {
             origin: "http://localhost:5000",
@@ -123,10 +124,8 @@ const io = socketio(server,
     }
 );
 
-io.on('connection', socket => 
+ioServer.on('connection', socket => 
 {
-    console.log("User connected");
-
     conections.push(socket)
 
     socket.on('post_bid', newBid =>
@@ -136,18 +135,37 @@ io.on('connection', socket =>
             if (result.status != 'S') 
             {
                 console.log("Error: " + result.error);
-                io.emit('bid_updated', newBid);
+                ioServer.emit('bid_updated', newBid);
             }
             else
             {
                 console.log("Result: " + result.status);
-                io.emit('bid_updated', newBid);
+                ioServer.emit('bid_updated', newBid);
             }
         });
     })
+
+    socket.on('disconnect', function() 
+    {
+        var i = conections.indexOf(socket);
+        conections.splice(i, 1);
+     });
 })
+
+let socket = io('http://localhost:4000');
+
+socket.on('new_bid', bid =>
+{
+    notifyBuyers(bid);
+});
+
+socket.on('update_bid', newBid =>
+{
+    ioServer.emit('bid_updated', newBid);
+});
+
 
 function notifyBuyers(bid)
 {
-    io.emit('new_bid', {bid: bid})
+    ioServer.emit('new_bid', {bid: bid})
 }
