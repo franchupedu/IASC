@@ -75,7 +75,7 @@ app.post('/buyers', urlencodedParser, function (req, res)
             "tags": ["Inmuebles", "Jueguitos"],
             "price" : 92.5,
             "duration": 50,
-            "article": ""
+            "article": "",
         }
     }
 */
@@ -84,6 +84,7 @@ app.post('/bids', function (req, res)
     var bid = req.body.bid;
     bid.id = uuidv4();
     bid.startTimestamp = + new Date();
+    bid.winningSon = "none";
 
     repository.PostBid(bid, (error, result) =>
     {
