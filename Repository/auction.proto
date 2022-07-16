@@ -16,11 +16,13 @@ message Bid {
     float duration = 4;
     string article = 5;
     repeated string tags = 6;
+    string user = 7;
 }
 
 message newBid {
     string id = 1;
     float price = 2;
+    string user = 3;
 }
 
 message Result {

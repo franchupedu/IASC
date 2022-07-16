@@ -10,10 +10,13 @@ html
         section
             each bid in results
                 div(id=bid.id)
-                    p #{bid.duration}
-                    p #{bid.tags}
-                    p #{bid.article}
+                    p Bid: 
+                    p Valid Through: #{bid.duration}
+                    p Tags: #{bid.tags}
+                    p Article: #{bid.article}
+                    p Current Owner: #{bid.user}
                     p Current Price: #{bid.price} <br>
+                    p New Bid: 
                     form(action="javascript:postNewBid(\""+ bid.id + "\")")
                         input(type="number", name="newBid", id="newBid", value= bid.price+1, min= bid.price+1)
                         input(type="submit", value="Bid")                      
@@ -21,6 +24,7 @@ html
         script.
             const socket = io();
             console.log("Conecting")
+            console.log("User: " + "#{user}")
 
             function postNewBid(bidId)
             {
@@ -28,8 +32,8 @@ html
                 var newBid
                 newBid = $("#" + bidId).find('input[name="newBid"]').val();
                 console.log('New Price: ' + newBid)
-
-                socket.emit('post_bid', {bidId: bidId, ammount: newBid});
+                var user = "#{user}"
+                socket.emit('post_bid', {bidId: bidId, ammount: newBid, user: user});
             }
 
             socket.on('bid_updated', bid =>

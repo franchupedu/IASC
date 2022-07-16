@@ -1,10 +1,28 @@
 version: '3'
 
 services:
+  noderepository:
+    image: matiasberardi/iascrepository
+    ports:
+      - 3000:3000
+      - 4000:4000
+    deploy:
+      replicas: 1
+      restart_policy:
+        max_attempts: 3
+        condition: on-failure       
+      update_config:
+        parallelism: 3
+        delay: 10s
+    networks: 
+      - balance  
+
   nodeapp:
    image: matiasberardi/iasc
    ports:
      - 5000:5000
+   depends_on:
+     - noderepository
    deploy:
      replicas: 1
      restart_policy:

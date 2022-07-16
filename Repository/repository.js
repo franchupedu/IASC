@@ -165,6 +165,7 @@ if (cluster.isMaster) {
                 var newBid = call.request;
                 if (validateNewBid(newBid)) {
                     bids.find(b => b.id == newBid.id).price = newBid.price;
+                    bids.find(b => b.id == newBid.id).user = newBid.user;
                     console.log(process.pid + ": bid "+ newBid.id+" updated")
                     process.send({ type: 'update_bid', data: newBid , sender: process.pid});
                     return callback(null, { status: "S", error: null })
@@ -173,7 +174,8 @@ if (cluster.isMaster) {
                 }
             },
             getBids: (_, callback) => {
-                return callback(null, { bids: bids });
+                var currentBids = getCurrentBids();
+                return callback(null, { bids: currentBids });
             }
         });
 
@@ -194,12 +196,20 @@ if (cluster.isMaster) {
         return true;
     }
 
-    function validateNewBid(newBid) {
-        var bid = bids.find(b => b.id == newBid.id);
+    function validateNewBid(newBid) 
+    {
+        var currentBids = getCurrentBids();
+        var bid = currentBids.find(b => b.id == newBid.id);
 
         if (bid == undefined || bid.price >= newBid.price)
             return false;
 
         return true;
+    }
+
+    function getCurrentBids()
+    {
+        var currentBids = bids.filter(b => parseInt(b.startTimestamp) + parseInt(b.duration) > Date.now());
+        return currentBids;
     }
 }

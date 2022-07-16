@@ -24,7 +24,7 @@ app.get('/', function(req, res)
     res.sendFile(__dirname + '/views/index.html');
 });
 
-app.get('/bids', function(req, res)
+app.get('/bids/:userName', function(req, res)
 {
     repository.GetBids({}, (error, bidList) =>
     {
@@ -32,11 +32,17 @@ app.get('/bids', function(req, res)
             res.sendStatus(500);
         else
         {
-            return res.render('bids', {results: bidList.bids});
+            var currentBids = bidList.bids.forEach(b => b.duration = new Date(parseInt(b.startTimestamp) + parseInt(b.duration)))
+            return res.render('bids', {results: bidList.bids, user: req.params.userName});
         }
             
     });
     
+})
+
+app.get('/bids', function(req, res)
+{
+    return res.redirect('/');
 })
 
 /* POST /buyers
@@ -63,7 +69,7 @@ app.post('/buyers', urlencodedParser, function (req, res)
         else
         {
             console.log("Result: " + result.status);
-            return res.redirect('/bids');  
+            return res.redirect('/bids/' + buyer.name);  
         }   
     });  
 });
@@ -84,7 +90,7 @@ app.post('/bids', function (req, res)
     var bid = req.body.bid;
     bid.id = uuidv4();
     bid.startTimestamp = + new Date();
-    bid.winningSon = "none";
+    bid.winningSon = "None";
 
     repository.PostBid(bid, (error, result) =>
     {
@@ -130,8 +136,9 @@ ioServer.on('connection', socket =>
     conections.push(socket)
 
     socket.on('post_bid', newBid =>
-    {        
-        repository.PostNewBid({id: newBid.bidId, price: newBid.ammount}, (error, result) =>
+    {       
+        console.log(newBid.user);
+        repository.PostNewBid({id: newBid.bidId, price: newBid.ammount, user: newBid.user}, (error, result) =>
         {
             if (result.status != 'S') 
             {
