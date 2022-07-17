@@ -5,5 +5,8 @@ Grupo 1 <br />
 Caso de Error "Got permission denied": sudo chmod 666 /var/run/docker.sock<br />
 Levantar el Swarm (Loadbalancer y nodos de la App): docker stack deploy -c docker-compose.yml swarmnodeapp<br />
 Actualizar las imagenes de Docker: <br />
-  docker image build -t matiasberardi/iasc<br />
+  docker image build -t matiasberardi/iasc .<br />
   docker image push matiasberardi/iasc<br />
+
+  docker image build -t matiasberardi/iascrepository .<br />
+  docker image push matiasberardi/iascrepository<br />

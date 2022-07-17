@@ -15,7 +15,7 @@ var packageDefinition = protoLoader.loadSync(PROTO_PATH, options);
 const AuctionService = grpc.loadPackageDefinition(packageDefinition).AuctionService;
 
 const client = new AuctionService(
-    "localhost:3000",
+    "noderepository:3000",
     grpc.credentials.createInsecure()
 );
 

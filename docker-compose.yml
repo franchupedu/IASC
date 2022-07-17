@@ -4,8 +4,8 @@ services:
   noderepository:
     image: matiasberardi/iascrepository
     ports:
-      - 3000:3000
-      - 4000:4000
+      - "3000:3000"
+      - "4000:4000"
     deploy:
       replicas: 1
       restart_policy:
@@ -14,13 +14,12 @@ services:
       update_config:
         parallelism: 3
         delay: 10s
-    networks: 
-      - balance  
-
+    networks:
+      - repository
   nodeapp:
    image: matiasberardi/iasc
    ports:
-     - 5000:5000
+     - "5000:5000"
    depends_on:
      - noderepository
    deploy:
@@ -32,12 +31,13 @@ services:
        parallelism: 3
        delay: 10s
    networks: 
-    - balance 
+    - balance
+    - repository
   
   proxy:
     image: matiasberardi/nginx_loadbalancer
     ports:
-      - 80:80
+      - "80:80"
     depends_on:
       - nodeapp
     deploy:
@@ -49,3 +49,4 @@ services:
 networks:
   balance:
     driver: overlay
+  repository:

@@ -179,6 +179,7 @@ if (cluster.isMaster) {
     server.addService(auctionProto.AuctionService.service,
         {
             postBuyer: (call, callback) => {
+                console.log("New Buyer Request");
                 var buyer = call.request;
                 
                 if (validateBuyer(buyer)) {
@@ -235,10 +236,10 @@ if (cluster.isMaster) {
         });
 
     server.bindAsync(
-        "localhost:" + PORT,
+        "0.0.0.0:" + PORT,
         grpc.ServerCredentials.createInsecure(),
         (error, port) => {
-            console.log("Server running at http://localhost:" + PORT);
+            console.log("Server running at http://0.0.0.0:" + PORT);
             server.start();
         }
     );
