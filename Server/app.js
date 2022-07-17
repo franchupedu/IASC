@@ -32,12 +32,32 @@ app.get('/bids/:userName', function(req, res)
             res.sendStatus(500);
         else
         {
-            var currentBids = bidList.bids.forEach(b => b.duration = new Date(parseInt(b.startTimestamp) + parseInt(b.duration)))
-            return res.render('bids', {results: bidList.bids, user: req.params.userName});
+            bidList.bids.forEach(b => b.duration = new Date(parseInt(b.startTimestamp) + parseInt(b.duration)))
+            var currentBids = bidList.bids.filter(b => b.status == 'In progress');
+            return res.render('bids', {results: currentBids, user: req.params.userName});
         }
             
     });
     
+})
+
+app.get('/bids/:userName/history', function(req, res)
+{
+    repository.GetBidsHistory({}, (error, bidList) =>
+    {
+        if (error != null) 
+            res.sendStatus(500);
+        else
+        {
+            var currentBids = bidList.bids.forEach(b => 
+                {
+                    b.duration = new Date(parseInt(b.startTimestamp) + parseInt(b.duration));
+                    if (b.duration <= Date.now() && b.status != 'Closed')
+                        b.status = "Done";
+                })
+            return res.render('bids history', {results: bidList.bids, user: req.params.userName});
+        }
+    })
 })
 
 app.get('/bids', function(req, res)
@@ -90,7 +110,8 @@ app.post('/bids', function (req, res)
     var bid = req.body.bid;
     bid.id = uuidv4();
     bid.startTimestamp = + new Date();
-    bid.winningSon = "None";
+    bid.status = "In progress";
+    bid.user = "None";
 
     repository.PostBid(bid, (error, result) =>
     {
@@ -103,10 +124,27 @@ app.post('/bids', function (req, res)
         {
             console.log("Result: " + result.status);
             notifyBuyers(bid);
-            return res.send('Subasta numero agregada exitosamente');
+            return res.send('Subasta ' + bid.id + ' agregada exitosamente');
         }
     })
 });
+
+app.delete('/bids/:id', function(req, res)
+{
+    repository.CloseBid({id: req.params.id}, (error, result) => 
+    {
+        if (result.status != 'S') 
+        {
+            console.log("Error: " + result.error)
+            return res.status(400).json({status: 400, message: result.error})
+        }
+        else
+        {
+            console.log("Result: " + result.status);
+            return res.send('Subasta ' + req.params.id + ' cerrada exitosamente');
+        }
+    })
+})
 
 app.get('/info', function(req, res)
 {

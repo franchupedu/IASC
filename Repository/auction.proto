@@ -17,6 +17,7 @@ message Bid {
     string article = 5;
     repeated string tags = 6;
     string user = 7;
+    string status = 8;
 }
 
 message newBid {
@@ -36,10 +37,16 @@ message BidList {
    repeated Bid bids = 1;
 }
 
+message BidId {
+    string id = 1;
+}
+
 service AuctionService 
 {
     rpc PostBuyer (Buyer) returns (Result) {}
     rpc PostBid (Bid) returns (Result) {}
     rpc PostNewBid (newBid) returns (Result) {}
     rpc GetBids (Empty) returns (BidList) {}
+    rpc GetBidsHistory (Empty) returns (BidList) {}
+    rpc CloseBid (BidId) returns (Result) {}
 }

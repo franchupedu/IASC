@@ -81,6 +81,24 @@ if (cluster.isMaster) {
                         }
                     }
                     console.log("Server: new buyer from worker " + msg.sender);
+                    break;
+                case 'close_bid':
+                    for (const w of workers) {
+                        if (w.process.pid !=  msg.sender) {
+                            w.send({ type: 'close_bid', data: msg.data , sender: msg.sender})
+                        }
+                    }
+                    io.emit('new_bid', null)
+                    console.log("Server: closed bid from worker " + msg.sender);
+                    break;
+                case 'get_data':
+                    for (const w of workers) {
+                        console.log(msg.data)
+                        if (w.process.pid == msg.data.target) {
+                            console.log('Load Data Msg')
+                            w.send({ type: 'load_data', data: {buyers: msg.data.buyers, bids: msg.data.bids} , sender: msg.sender})
+                        }
+                    }
             }
         });
     }
@@ -101,6 +119,11 @@ if (cluster.isMaster) {
 
         var newWorker = cluster.fork();
         workers.push(newWorker);
+        if(workers.length > 1)
+        {
+            console.log('Get Data')
+            workers[0].send({ type: 'get_data', target: newWorker.process.pid})
+        }
     });
   
 
@@ -136,6 +159,20 @@ if (cluster.isMaster) {
                     buyers.push(buyer);
                     console.log(process.pid + ': new buyer from worker '+ msg.sender +' created')
                 }
+                break;
+            case 'close_bid':
+                var bidId = msg.data;
+                bids.find(b => b.id = bidId).status = 'Closed';
+                console.log(process.pid + ': closed bid from worker '+ msg.sender)
+                break;
+            case 'get_data':
+                process.send({ type: 'get_data', data: {target: msg.target, buyers: buyers, bids: bids} , sender: process.pid});
+                break;
+            case 'load_data':
+                console.log('Load Data')
+                bids = msg.data.bids;
+                buyers = msg.data.buyers;
+                break;
         }
     })
 
@@ -175,7 +212,25 @@ if (cluster.isMaster) {
             },
             getBids: (_, callback) => {
                 var currentBids = getCurrentBids();
+                console.log('From: ' + process.pid);
                 return callback(null, { bids: currentBids });
+            },
+            getBidsHistory: (_, callback) => {
+                return callback(null, {bids: bids});
+            },
+            closeBid: (call, callback) => 
+            {
+                var i = bids.map(function(b) {return b.id}).indexOf(call.request.id);
+                if(i == -1)
+                    return callback(null, { status: "N", error: "Invalid Bid" });
+
+                var bid = bids[i];
+                if(parseInt(bid.startTimestamp) + parseInt(bid.duration) < Date.now())
+                    return callback(null, { status: "N", error: "Bid is already closed" });
+
+                bid.status = "Closed";
+                process.send({ type: 'close_bid', data: bid.id , sender: process.pid});
+                return callback(null, { status: "S", error: null })
             }
         });
 
