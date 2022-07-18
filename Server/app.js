@@ -198,8 +198,8 @@ ioServer.on('connection', socket =>
      });
 })
 
-//let socket = io('http://noderepository:4000');
-let socket = io('http://localhost:4000');
+let socket = io('http://noderepository:4000');
+//let socket = io('http://localhost:4000');
 
 
 socket.on('new_bid', bid =>
