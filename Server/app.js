@@ -26,7 +26,7 @@ app.get('/', function(req, res)
 
 app.get('/bids/:userName', function(req, res)
 {
-    repository.GetBids({}, (error, bidList) =>
+    repository.GetBids({username: req.params.userName}, (error, bidList) =>
     {
         if (error != null) 
             res.sendStatus(500);
@@ -198,7 +198,9 @@ ioServer.on('connection', socket =>
      });
 })
 
-let socket = io('http://noderepository:4000');
+//let socket = io('http://noderepository:4000');
+let socket = io('http://localhost:4000');
+
 
 socket.on('new_bid', bid =>
 {

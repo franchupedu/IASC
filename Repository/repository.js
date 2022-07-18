@@ -211,10 +211,13 @@ if (cluster.isMaster) {
                     return callback(null, { status: "N", error: "Invalid Bid" });
                 }
             },
-            getBids: (_, callback) => {
+            getBids: (call, callback) => {
                 var currentBids = getCurrentBids();
+                var username = call.request.username;
+                var tags = buyers.find(b => b.name == username).tags
+                var relevantBids = currentBids.filter(b=> b.tags.some(t=>tags.includes(t)))
                 console.log('From: ' + process.pid);
-                return callback(null, { bids: currentBids });
+                return callback(null, { bids: relevantBids });
             },
             getBidsHistory: (_, callback) => {
                 return callback(null, {bids: bids});
